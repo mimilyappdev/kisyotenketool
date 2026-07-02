@@ -189,6 +189,45 @@
     transition: background .12s, border-color .12s;
   }
   .sidebar-footer button:hover { background: var(--brand-light); border-color: var(--brand); }
+  .support-link {
+    position: relative;
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    color: var(--ink3);
+    font-size: 12px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 9px 10px;
+    transition: border-color .12s, color .12s;
+  }
+  .support-link:hover { border-color: var(--brand); color: var(--brand); }
+  .support-link::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    margin-bottom: 8px;
+    background: var(--brand-dark);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: normal;
+    text-align: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .support-link:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
   /* Main */
   #main {
@@ -327,6 +366,31 @@
   }
   .add-serifu-btn:hover { border-color: var(--brand); color: var(--brand); }
 
+  /* Footer */
+  .app-footer {
+    flex-shrink: 0;
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    padding: 8px 16px;
+    font-size: 11px;
+    color: var(--ink3);
+  }
+  .app-footer .ft-logo {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    color: var(--brand);
+  }
+  .app-footer a {
+    color: var(--ink3);
+    text-decoration: none;
+  }
+  .app-footer a:hover { color: var(--brand); }
+
   /* Mobile: drawer sidebar */
   @media (max-width: 899px) {
     .hamburger { display: flex; }
@@ -376,6 +440,7 @@
       <button id="importBtn">読み込み</button>
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none">
+    <a class="support-link" href="https://mimily7.booth.pm/items/8551983" target="_blank" rel="noopener" data-tooltip="よかったら開発を応援いただけると助かります…！">💛 開発応援</a>
   </div>
 
   <div id="main">
@@ -391,6 +456,15 @@
     </div>
   </div>
 </div>
+
+<footer class="app-footer">
+  <span class="ft-logo">Kisyotenketool</span>
+  <a href="https://mimilyappdev.github.io/legal/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
+  <a href="https://mimilyappdev.github.io/" target="_blank" rel="noopener">Mimilyアプリ一覧</a>
+  <a href="https://x.com/mimilydesign" target="_blank" rel="noopener">X (@mimilydesign)</a>
+  <a href="https://note.com/mimilydesign" target="_blank" rel="noopener">開発日記 (note)</a>
+  <span>© 2026 Mimily</span>
+</footer>
 
 <script>
 const STORAGE_KEY = 'kisyotenketool_data';
