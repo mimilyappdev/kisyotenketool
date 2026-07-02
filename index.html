@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>起承転結ーる (Kisyotenketool)｜4コマ・漫画のセリフメモ</title>
+<meta name="description" content="4コマや漫画のセリフを起承転結の各コマごとにメモできるツール。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Zen+Maru+Gothic:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand: #6C4AB6;
+    --brand-dark: #4f3485;
+    --brand-light: #efe7fa;
+    --page-bg: #F4F0EA;
+    --panel-bg: #FDFBF9;
+    --border: #EDE8E2;
+    --ink: #2D2420;
+    --ink2: #7A6860;
+    --ink3: #B8A090;
+    --ki: #e8b04b;
+    --sho: #6fa8dc;
+    --ten: #e07a7a;
+    --ketsu: #7cb98a;
+    --shadow: 0 4px 20px rgba(45,36,32,0.08);
+    --shadow-lg: 0 10px 40px rgba(45,36,32,0.16);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: 'Noto Sans JP', "Hiragino Kaku Gothic ProN", sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Topbar */
+  .topbar {
+    flex-shrink: 0;
+    height: 56px;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    position: relative;
+    z-index: 30;
+  }
+  .hamburger {
+    display: none;
+    width: 34px;
+    height: 34px;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .hamburger:hover { background: var(--brand-light); }
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    background: var(--brand);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-wrap {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+    gap: 3px;
+  }
+  .logo-en {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--brand);
+    letter-spacing: -0.02em;
+  }
+  .logo-ja {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    color: var(--ink3);
+    letter-spacing: 0.05em;
+  }
+
+  /* App body layout */
+  #appBody {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+  #overlay {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0; right: 0; bottom: 0;
+    background: rgba(45,36,32,0.35);
+    z-index: 25;
+  }
+  #overlay.show { display: block; }
+
+  /* Sidebar */
+  #sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--panel-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+  #newWorkBtn {
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    margin-bottom: 14px;
+    transition: background .15s, transform .1s;
+  }
+  #newWorkBtn:hover { background: var(--brand-dark); transform: translateY(-1px); }
+  #workList {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .work-item {
+    padding: 10px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    transition: background .12s;
+  }
+  .work-item:hover { background: var(--border); }
+  .work-item.active { background: var(--brand-light); font-weight: bold; color: var(--brand-dark); }
+  .work-item .title-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+  .work-item .del-btn {
+    opacity: 0.4;
+    font-size: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 2px 4px;
+  }
+  .work-item .del-btn:hover { opacity: 1; color: var(--ten); }
+  .sidebar-footer {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-footer button {
+    flex: 1;
+    font-size: 12px;
+    padding: 7px 4px;
+    border: 1px solid var(--border);
+    background: var(--panel-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .12s, border-color .12s;
+  }
+  .sidebar-footer button:hover { background: var(--brand-light); border-color: var(--brand); }
+
+  /* Main */
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px 60px;
+  }
+  #emptyState {
+    color: var(--ink3);
+    text-align: center;
+    margin-top: 100px;
+    font-size: 14px;
+  }
+  #titleInput {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    width: 100%;
+    outline: none;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+  #titleInput::placeholder { color: var(--ink3); }
+  .save-status {
+    font-size: 12px;
+    color: var(--ink3);
+    margin-bottom: 18px;
+    height: 14px;
+  }
+  #memoBox {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel-bg);
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    margin-bottom: 28px;
+    outline: none;
+    transition: border-color .12s;
+  }
+  #memoBox:focus { border-color: var(--brand); }
+  .memo-label {
+    font-size: 12px;
+    color: var(--ink2);
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 500;
+  }
+
+  .panels {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    border-top: 5px solid var(--panel-color, var(--brand));
+    box-shadow: var(--shadow);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .panel:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .panel-header .kanji {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--panel-color, var(--brand));
+  }
+  .panel-header .label {
+    font-size: 12px;
+    color: var(--ink3);
+  }
+  .serifu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .serifu-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .serifu-row .num {
+    font-size: 11px;
+    color: var(--ink3);
+    width: 16px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .serifu-row input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 8px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color .12s;
+  }
+  .serifu-row input:focus { border-color: var(--brand); }
+  .serifu-row .rm-btn {
+    border: none;
+    background: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    flex-shrink: 0;
+  }
+  .serifu-row .rm-btn:hover { color: var(--ten); }
+  .add-serifu-btn {
+    width: 100%;
+    border: 1px dashed var(--border);
+    background: transparent;
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 12px;
+    color: var(--ink3);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .12s, color .12s;
+  }
+  .add-serifu-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+  /* Mobile: drawer sidebar */
+  @media (max-width: 899px) {
+    .hamburger { display: flex; }
+    #sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: 78vw;
+      max-width: 300px;
+      transform: translateX(-100%);
+      transition: transform .25s ease;
+      z-index: 30;
+      box-shadow: var(--shadow-lg);
+    }
+    #sidebar.open { transform: translateX(0); }
+    .panels { grid-template-columns: 1fr; }
+    #main { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button id="hamburgerBtn" class="hamburger" aria-label="メニュー">☰</button>
+  <div class="logo-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="8" height="8" rx="1.5" fill="white"/>
+      <rect x="13" y="3" width="8" height="8" rx="1.5" fill="white" opacity="0.85"/>
+      <rect x="3" y="13" width="8" height="8" rx="1.5" fill="white" opacity="0.7"/>
+      <rect x="13" y="13" width="8" height="8" rx="1.5" fill="white" opacity="0.55"/>
+    </svg>
+  </div>
+  <div class="logo-wrap">
+    <span class="logo-en">Kisyotenketool</span>
+    <span class="logo-ja">起承転結ーる</span>
+  </div>
+</header>
+
+<div id="appBody">
+  <div id="overlay"></div>
+  <div id="sidebar">
+    <button id="newWorkBtn">＋ 新規メモ</button>
+    <div id="workList"></div>
+    <div class="sidebar-footer">
+      <button id="exportBtn">書き出し</button>
+      <button id="importBtn">読み込み</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+
+  <div id="main">
+    <div id="emptyState">左の「＋ 新規メモ」から始めてください</div>
+    <div id="editor" style="display:none">
+      <input id="titleInput" type="text" placeholder="無題の作品">
+      <div class="save-status" id="saveStatus"></div>
+
+      <span class="memo-label">メモ（構図・状況・全体のアイデアなど自由に）</span>
+      <textarea id="memoBox" placeholder="ここに自由にメモ..."></textarea>
+
+      <div class="panels" id="panels"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'kisyotenketool_data';
+const PANEL_DEFS = [
+  { key: 'ki',    kanji: '起', label: 'きっかけ・導入', color: 'var(--ki)' },
+  { key: 'sho',   kanji: '承', label: '展開',           color: 'var(--sho)' },
+  { key: 'ten',   kanji: '転', label: 'ひねり・オチ前', color: 'var(--ten)' },
+  { key: 'ketsu', kanji: '結', label: 'オチ・締め',     color: 'var(--ketsu)' },
+];
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { works: [], currentId: null };
+    const parsed = JSON.parse(raw);
+    if (!parsed.works) return { works: [], currentId: null };
+    return parsed;
+  } catch (e) {
+    return { works: [], currentId: null };
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const el = document.getElementById('saveStatus');
+  el.textContent = '保存しました ' + new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+let state = loadData();
+
+function emptyPanels() {
+  const p = {};
+  PANEL_DEFS.forEach(d => p[d.key] = ['']);
+  return p;
+}
+
+function makeWork() {
+  return {
+    id: 'w' + Date.now() + Math.random().toString(36).slice(2, 7),
+    title: '',
+    memo: '',
+    panels: emptyPanels(),
+    updatedAt: Date.now(),
+  };
+}
+
+function getCurrentWork() {
+  return state.works.find(w => w.id === state.currentId) || null;
+}
+
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('overlay');
+
+function closeDrawerIfMobile() {
+  if (window.innerWidth < 900) {
+    sidebarEl.classList.remove('open');
+    overlayEl.classList.remove('show');
+  }
+}
+
+document.getElementById('hamburgerBtn').onclick = () => {
+  sidebarEl.classList.toggle('open');
+  overlayEl.classList.toggle('show');
+};
+overlayEl.onclick = closeDrawerIfMobile;
+
+function renderWorkList() {
+  const listEl = document.getElementById('workList');
+  listEl.innerHTML = '';
+  const sorted = [...state.works].sort((a, b) => b.updatedAt - a.updatedAt);
+  sorted.forEach(w => {
+    const item = document.createElement('div');
+    item.className = 'work-item' + (w.id === state.currentId ? ' active' : '');
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'title-text';
+    titleSpan.textContent = w.title || '無題の作品';
+    item.appendChild(titleSpan);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '✕';
+    delBtn.title = '削除';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (confirm(`「${w.title || '無題の作品'}」を削除しますか？`)) {
+        state.works = state.works.filter(x => x.id !== w.id);
+        if (state.currentId === w.id) {
+          state.currentId = state.works.length ? state.works[0].id : null;
+        }
+        saveData();
+        renderAll();
+      }
+    };
+    item.appendChild(delBtn);
+    item.onclick = () => {
+      state.currentId = w.id;
+      saveData();
+      renderAll();
+      closeDrawerIfMobile();
+    };
+    listEl.appendChild(item);
+  });
+}
+
+function renderEditor() {
+  const work = getCurrentWork();
+  const empty = document.getElementById('emptyState');
+  const editor = document.getElementById('editor');
+  if (!work) {
+    empty.style.display = 'block';
+    editor.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  editor.style.display = 'block';
+
+  const titleInput = document.getElementById('titleInput');
+  titleInput.value = work.title;
+  titleInput.oninput = () => {
+    work.title = titleInput.value;
+    work.updatedAt = Date.now();
+    saveData();
+    renderWorkList();
+  };
+
+  const memoBox = document.getElementById('memoBox');
+  memoBox.value = work.memo;
+  memoBox.oninput = () => {
+    work.memo = memoBox.value;
+    work.updatedAt = Date.now();
+    saveData();
+  };
+
+  const panelsEl = document.getElementById('panels');
+  panelsEl.innerHTML = '';
+  PANEL_DEFS.forEach(def => {
+    if (!work.panels[def.key]) work.panels[def.key] = [''];
+    const panelEl = document.createElement('div');
+    panelEl.className = 'panel';
+    panelEl.style.setProperty('--panel-color', def.color);
+
+    const header = document.createElement('div');
+    header.className = 'panel-header';
+    header.innerHTML = `<span class="kanji">${def.kanji}</span><span class="label">${def.label}</span>`;
+    panelEl.appendChild(header);
+
+    const listEl = document.createElement('div');
+    listEl.className = 'serifu-list';
+
+    work.panels[def.key].forEach((line, idx) => {
+      const row = document.createElement('div');
+      row.className = 'serifu-row';
+
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = (idx + 1) + '.';
+      row.appendChild(num);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = line;
+      input.placeholder = `${def.kanji}のセリフ${idx + 1}`;
+      input.oninput = () => {
+        work.panels[def.key][idx] = input.value;
+        work.updatedAt = Date.now();
+        saveData();
+      };
+      row.appendChild(input);
+
+      const rmBtn = document.createElement('button');
+      rmBtn.className = 'rm-btn';
+      rmBtn.textContent = '✕';
+      rmBtn.onclick = () => {
+        work.panels[def.key].splice(idx, 1);
+        if (work.panels[def.key].length === 0) work.panels[def.key] = [''];
+        work.updatedAt = Date.now();
+        saveData();
+        renderEditor();
+      };
+      row.appendChild(rmBtn);
+
+      listEl.appendChild(row);
+    });
+
+    panelEl.appendChild(listEl);
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-serifu-btn';
+    addBtn.textContent = `＋ ${def.kanji}にセリフ追加`;
+    addBtn.onclick = () => {
+      work.panels[def.key].push('');
+      work.updatedAt = Date.now();
+      saveData();
+      renderEditor();
+      const inputs = panelEl.querySelectorAll('input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    };
+    panelEl.appendChild(addBtn);
+
+    panelsEl.appendChild(panelEl);
+  });
+}
+
+function renderAll() {
+  renderWorkList();
+  renderEditor();
+}
+
+document.getElementById('newWorkBtn').onclick = () => {
+  const w = makeWork();
+  state.works.push(w);
+  state.currentId = w.id;
+  saveData();
+  renderAll();
+  document.getElementById('titleInput').focus();
+  closeDrawerIfMobile();
+};
+
+document.getElementById('exportBtn').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kisyotenketool_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('importBtn').onclick = () => {
+  document.getElementById('importFile').click();
+};
+
+document.getElementById('importFile').onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (!imported.works) throw new Error('invalid');
+      const existingIds = new Set(state.works.map(w => w.id));
+      let addedCount = 0;
+      imported.works.forEach(w => {
+        if (!existingIds.has(w.id)) {
+          state.works.push(w);
+          addedCount++;
+        }
+      });
+      if (imported.works.length && !state.currentId) {
+        state.currentId = imported.works[0].id;
+      }
+      saveData();
+      renderAll();
+      alert(`${addedCount}件の作品を読み込みました`);
+    } catch (err) {
+      alert('読み込みに失敗しました。ファイル形式を確認してください。');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+renderAll();
+</script>
+
+</body>
+</html>
